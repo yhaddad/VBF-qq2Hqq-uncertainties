@@ -4,6 +4,9 @@
 //
 // email:  yhaddad@cern.ch
 
+// Updates 25-03-2020:
+// - adding EKW corrections
+
 #include <vector>
 #include <map>
 #include <iostream>
@@ -45,6 +48,25 @@ static std::map<int, std::vector<double> > stxs_acc =
    { 224 , {0.0081,-0.2062 , 0.016  , 0.0168 , 0.0223 , 0.0376 , 0.0578 , 0.1149  ,   +0.0223 ,  0.0155}}  // Mjj 1500-inf , PTHjj 25-inf  , pTH 200-inf
 };
 
+// acceptances for VBH+VHHad: from NJets (NLO) + H7
+// These values are valid for mjj < 350 GeV, above that please use the standard numbers
+
+static std::map<int, std::vector<double> > stxs_acc_with_vhhad  =
+  {//STXS   TOT   ,  PTH200,  Mjj60 , Mjj120 , Mjj350 , Mjj700 ,Mjj1000 ,Mjj1500  ,  25       , JET01
+   { 200 , {0.07977,  0     , 0      , 0      , 0      , 0      , 0      , 0       ,        0  ,    0   }},
+   { 201 , {0.02539,  0     , 0      , 0      , 0      , 0      , 0      , 0       ,        0  ,-0.1649 }}, // Jet01
+   { 202 , {0.06457,  0     , 0      , 0      , 0      , 0      , 0      , 0       ,        0  ,-0.7464 }}, // Jet01
+
+   { 203 , {0.00003,  0     ,-0.6571 , 0      , 0      , 0      , 0      , 0       ,   -0.0567 ,  0.0178}}, // Mjj 0-60,      PTHjj 0-25
+   { 204 , {0.00747,  0     , 0.0282 ,-0.5951 , 0      , 0      , 0      , 0       ,   -0.0876 ,  0.0275}}, // Mjj 60-120,    PTHjj 0-25
+   { 205 , {0.02397,  0     , 0.0902 , 0.0946 ,-0.3791 , 0      , 0      , 0       ,   -0.2799 ,  0.0877}}, // Mjj 120-350,   PTHjj 0-25
+
+   { 214 , {0.02242,  0     ,-0.3429 , 0      , 0      , 0      , 0      , 0       ,   +0.0567 ,  0.0093}}, // Mjj 0-60,      PTHjj 25-inf
+   { 215 , {0.00779,  0     , 0.0192 ,-0.4049 , 0      , 0      , 0      , 0       ,   +0.0876 ,  0.0187}}, // Mjj 60-120,    PTHjj 25-inf
+   { 216 , {0.00872,  0     , 0.1477 , 0.0155 ,-0.6209 , 0      , 0      , 0       ,   +0.2799 ,  0.1437}}, // Mjj 120-350,   PTHjj 25-inf
+};
+
+
 // uncertainty sources extracted from proVBF NNLO
 // 10 nuissances:  1 x yield, 1 x 3rd jet veto, 6 x Mjj cuts, 1 x 01->2 jetBin, 1 x PTH cut
 //+--------------------+--------+-------+-------+--------+--------+--------+---------+---------+--------+--------+
@@ -85,6 +107,49 @@ std::map<int, double> powheg_xsec
    {223,   22.044 },
    {224,   31.565 }};
 
+// EWcorr : (1 + DeltaEW) correction factor to mutiply by the cross section
+// SigPho : Incoming photon contribution 
+// DeltaEW: is the yellow report definition for EW errors
+std::map<int, std::vector<double> > EW_correction {
+//stxs, LO    , EWcorr, SigPho,DeltaEW 
+  {200,{  1.000,  1.000,  0.000,  0.000}},
+  {201,{  0.000,  1.000,  0.000,  0.000}},
+  {202,{  0.000,  1.000,  0.000,  0.000}},
+  {203,{  6.670,  0.981,  0.081,  0.012}}, //   0 < m_jj < 60
+  {214,{  6.670,  0.981,  0.081,  0.012}}, //   0 < m_jj < 60
+  {204,{ 601.78,  0.938,  7.440,  0.012}}, //  60 < m_jj < 120
+  {215,{ 601.78,  0.938,  7.440,  0.012}}, //  60 < m_jj < 120
+  {205,{ 540.59,  0.981,  6.567,  0.012}}, // 120 < m_jj < 350
+  {216,{ 540.59,  0.981,  6.567,  0.012}}, // 120 < m_jj < 350
+  // pTH < 200
+  {206,{ 659.75,  0.955,  9.056,  0.014}}, // 350 < m_jj < 700
+  {217,{ 659.75,  0.955,  9.056,  0.014}}, // 350 < m_jj < 700
+  {207,{ 318.83,  0.937,  4.820,  0.015}}, // 700 < m_jj < 1000
+  {218,{ 318.83,  0.937,  4.820,  0.015}}, // 700 < m_jj < 1000
+  {208,{ 275.94,  0.921,  4.481,  0.016}}, //1000 < m_jj < 1500
+  {219,{ 275.94,  0.921,  4.481,  0.016}}, //1000 < m_jj < 1500
+  {209,{ 251.33,  0.899,  4.798,  0.019}}, //       m_jj > 1500
+  {220,{ 251.33,  0.899,  4.798,  0.019}}, //       m_jj > 1500
+  // pTH > 200
+  {210,{  45.72,  0.927,  0.807,  0.018}}, // 350 < m_jj < 700
+  {221,{  45.72,  0.927,  0.807,  0.018}}, // 350 < m_jj < 700
+  {211,{  37.91,  0.907,  0.647,  0.017}}, // 700 < m_jj < 1000
+  {222,{  37.91,  0.907,  0.647,  0.017}}, // 700 < m_jj < 1000
+  {212,{  44.03,  0.883,  0.765,  0.017}}, //1000 < m_jj < 1500
+  {223,{  44.03,  0.883,  0.765,  0.017}}, //1000 < m_jj < 1500
+  {213,{  55.99,  0.851,  1.165,  0.022}}, //       m_jj > 1500 
+  {224,{  55.99,  0.851,  1.165,  0.022}}, //       m_jj > 1500
+};
+
+double vbf_ew_correction_stage_1_1(int event_STXS, bool with_imc_photon=false){
+  double corr = stxs_acc[event_STXS][1];
+  if(with_imc_photon){
+    corr *= 1.0 + (stxs_acc[event_STXS][2] / powheg_xsec[event_STXS]);
+  }
+  return corr;
+}
+
+
 // Propagation function
 double vbf_uncert_stage_1_1(int source, int event_STXS, double Nsigma=1.0){
   // return a single weight for a given souce
@@ -95,6 +160,26 @@ double vbf_uncert_stage_1_1(int source, int event_STXS, double Nsigma=1.0){
     return 0.0;
   }
 };
+
+// -------------------
+// for printing only
+// -------------------
+
+// print EW corrections 
+void print_ew_corr(){
+  std::cout << " ======================================================== " << std::endl;
+  std::cout << " === Electroweak corrections extracted from HAWK 3.0  === " << std::endl;
+  std::cout << " BIN: "         << std::setw(8)
+            << " (1 + D_ew) | " << std::setw(8)
+            << " (1 + D_ph) | " << std::setw(8)
+            << " Uncert     "   << std::endl;
+  for (auto& bin : powheg_xsec) {
+    std::cout <<" "<< bin.first << ": ";
+    for (int s=0; s < 4; s++)
+      std::cout << std::setw(8) << std::setprecision(5) << EW_correction[bin.first][s] << " | ";
+    std::cout<< "" << std::endl;
+  }
+}
 
 // print big table
 void print_bigtable(bool relative=true){
@@ -176,4 +261,5 @@ int main(){
   print_bigtable();
   print_bigtable(false);
   print_corr();
+  print_ew_corr();
 }
