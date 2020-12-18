@@ -1,4 +1,7 @@
 # VBF-qq2Hqq-uncertainties
+[![DOI](https://zenodo.org/badge/187642785.svg)](https://zenodo.org/badge/latestdoi/187642785)
+
+
 This is a simple tool to estimate VBF uncertainties in STXS stage 1.1 bins.
 The details of the calculation can be found [here](https://indico.cern.ch/event/796065/contributions/3307675/attachments/1799797/2935242/VBF-STSX-HXSWG-WG1-FEB.pdf).
 
